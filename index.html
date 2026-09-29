@@ -108,6 +108,11 @@ main{max-width:100%}
 
 <section class="view" id="v-settings">
   <div class="card">
+    <h3>계정 · 클라우드 저장</h3>
+    <div class="muted" id="acct-msg">불러오는 중…</div>
+    <button class="btn" id="acct-btn" style="display:none">Google로 로그인</button>
+  </div>
+  <div class="card">
     <h3>설정</h3>
     <label>내 이름 (편지에서 불러줄 이름)</label>
     <input type="text" id="s-name" placeholder="예: 나은">
@@ -140,6 +145,7 @@ main{max-width:100%}
 <svg width="0" height="0" style="position:absolute"><filter id="yarn"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.5"/></filter></svg>
 <div class="toast" id="toast"></div>
 
+<script src="firebase-config.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const EMO={neu:['그저 그런','그리운','시원섭섭한','심심한','무기력한','지루한','무감한','고민되는','궁금한','놀란','혼란스러운'],
@@ -181,7 +187,7 @@ function openModal(html){$('#sheet').innerHTML=html;$('#modal').classList.add('o
 function closeModal(){$('#modal').classList.remove('on');renderLetters()}
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'||e.target.classList.contains('close'))closeModal()});
 function openLetter(i){
-  const l=letters[i];if(!l)return;l.read=true;L.set('letters',letters);
+  const l=letters[i];if(!l)return;l.read=true;L.set('letters',letters);cloudSet('letters',l);
   openModal(`<div class="dog">${poodle('open')}</div><div class="paper"><div class="letter-date">${fmt(l.at)} · ${esc(l.from||'')}</div><div class="letter">${esc(l.text)}</div></div><button class="close">닫기</button>`);
 }
 
@@ -225,8 +231,9 @@ function renderProgress(){
 $('#save').onclick=()=>{
   if(!mood)return toast('기분을 먼저 골라줘');
   if(!picked.size&&!$('#memo').value.trim())return toast('감정이나 메모를 하나는 적어줘');
-  records.unshift({at:Date.now(),mood,emotions:[...picked],memo:$('#memo').value.trim()});
-  L.set('records',records);
+  const rec={at:Date.now(),mood,emotions:[...picked],memo:$('#memo').value.trim()};
+  records.unshift(rec);
+  L.set('records',records);cloudSet('records',rec);
   mood=null;picked.clear();$('#memo').value='';
   document.querySelectorAll('.chip[data-w],#mood button').forEach(x=>x.classList.remove('on'));
   renderProgress();toast('기록했어요 ✨');
@@ -239,7 +246,7 @@ function renderLetters(){
 }
 function renderHistory(){
   $('#history').innerHTML=records.length?records.map((r,i)=>`<div class="card rec"><div class="top"><span>${fmt(r.at)} ${MOODS[r.mood-1]}</span><button class="del" data-i="${i}">삭제</button></div><div class="tags">${r.emotions.map(e=>`<span>${esc(e)}</span>`).join('')}</div>${r.memo?`<p>${esc(r.memo)}</p>`:''}</div>`).join(''):'<div class="card muted">아직 기록이 없어요.</div>';
-  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{records.splice(+b.dataset.i,1);L.set('records',records);renderHistory();renderProgress()});
+  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{const r=records.splice(+b.dataset.i,1)[0];L.set('records',records);cloudDel('records',r);renderHistory();renderProgress()});
 }
 
 function fallbackLetter(recs){
@@ -276,19 +283,76 @@ $('#getLetter').onclick=async()=>{
   let text;
   try{text=cfg.key?await aiLetter(recs):fallbackLetter(recs);}
   catch(e){text=fallbackLetter(recs);toast('AI 연결 실패, 기본 편지로 대체했어요');console.error(e)}
-  letters.unshift({at:Date.now(),text,from:cfg.char||'마음이'});L.set('letters',letters);
+  const nl={at:Date.now(),text,from:cfg.char||'마음이',read:false};letters.unshift(nl);L.set('letters',letters);cloudSet('letters',nl);
   b.disabled=false;b.textContent='지금 편지 받기';renderProgress();show('letters');openLetter(0);
 };
 
 $('#s-save').onclick=()=>{
   cfg.name=$('#s-name').value.trim();cfg.char=$('#s-char').value.trim()||'마음이';cfg.key=$('#s-key').value.trim();cfg.model=$('#s-model').value.trim()||'claude-sonnet-5-5';
-  L.set('cfg',cfg);renderProgress();toast('저장했어요');
+  L.set('cfg',cfg);cloudCfg();renderProgress();toast('저장했어요');
 };
 $('#export').onclick=()=>{const b=new Blob([JSON.stringify({records,letters},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='maeum-diary.json';a.click()};
-$('#wipe').onclick=()=>{if(confirm('기록과 편지를 모두 삭제할까? 되돌릴 수 없어요.')){records=[];letters=[];L.set('records',[]);L.set('letters',[]);renderProgress();toast('삭제했어요')}};
+$('#wipe').onclick=()=>{if(confirm('기록과 편지를 모두 삭제할까? 되돌릴 수 없어요.')){const rs=records,ls=letters;records=[];letters=[];L.set('records',[]);L.set('letters',[]);cloudWipe(rs,ls);renderProgress();toast('삭제했어요')}};
+
+/* ---------- Firebase (Google 로그인 + Firestore 동기화) ---------- */
+const CLOUD={user:null,unsubs:[]};
+const FB='https://www.gstatic.com/firebasejs/10.14.1/';
+function clean(o){return JSON.parse(JSON.stringify(o))}
+function cdoc(col,at){return CLOUD.F.doc(CLOUD.db,'users',CLOUD.user.uid,col,String(at))}
+function cloudSet(col,o){if(!CLOUD.user)return;CLOUD.F.setDoc(cdoc(col,o.at),clean(o),{merge:true}).catch(e=>{console.error(e);toast('클라우드 저장에 실패했어요')})}
+function cloudDel(col,o){if(!CLOUD.user||!o)return;CLOUD.F.deleteDoc(cdoc(col,o.at)).catch(console.error)}
+function cloudCfg(){if(!CLOUD.user)return;const {name,char,model,tone}=cfg;CLOUD.F.setDoc(CLOUD.F.doc(CLOUD.db,'users',CLOUD.user.uid,'settings','cfg'),clean({name,char,model,tone}),{merge:true}).catch(console.error)}
+async function cloudWipe(rs,ls){
+  if(!CLOUD.user)return;const F=CLOUD.F;
+  try{const items=[...rs.map(r=>['records',r]),...ls.map(l=>['letters',l])];
+    for(let i=0;i<items.length;i+=400){const b=F.writeBatch(CLOUD.db);items.slice(i,i+400).forEach(([c,o])=>b.delete(cdoc(c,o.at)));await b.commit()}
+  }catch(e){console.error(e);toast('클라우드 삭제에 실패했어요')}
+}
+function refreshAll(){renderProgress();renderLetters();renderHistory();$('#s-name').value=cfg.name||'';$('#s-char').value=cfg.char||'';$('#s-model').value=cfg.model||'';renderTone()}
+function renderAccount(msg){
+  const m=$('#acct-msg'),b=$('#acct-btn');
+  if(!window.FIREBASE_CONFIG||!window.FIREBASE_CONFIG.apiKey){m.textContent='클라우드 저장이 아직 설정되지 않았어요. 지금은 이 기기에만 저장돼요.';b.style.display='none';return}
+  if(!CLOUD.auth){m.textContent=msg||'연결 중…';b.style.display='none';return}
+  b.style.display='block';
+  if(CLOUD.user){m.textContent=`${CLOUD.user.displayName||CLOUD.user.email||'로그인됨'} 계정으로 동기화 중이에요. 기록은 어느 기기에서든 같이 보여요.`;b.textContent='로그아웃';b.className='btn ghost'}
+  else{m.textContent=msg||'로그인하면 기록이 내 계정에 저장되고, 폰과 PC에서 같이 볼 수 있어요.';b.textContent='Google로 로그인';b.className='btn'}
+}
+$('#acct-btn').onclick=async()=>{
+  if(!CLOUD.auth)return;const Au=CLOUD.Au;
+  try{ if(CLOUD.user){await Au.signOut(CLOUD.auth)} else {await Au.signInWithPopup(CLOUD.auth,new Au.GoogleAuthProvider())} }
+  catch(e){console.error(e);toast(e.code==='auth/popup-closed-by-user'?'로그인이 취소됐어요':'로그인에 실패했어요 ('+(e.code||'오류')+')')}
+};
+async function onUser(u){
+  CLOUD.unsubs.forEach(f=>f());CLOUD.unsubs=[];CLOUD.user=u;renderAccount();
+  if(!u)return;const F=CLOUD.F,uid=u.uid;
+  if(L.get('owner',null)&&L.get('owner')!==uid){records=[];letters=[];L.set('records',[]);L.set('letters',[])}
+  L.set('owner',uid);
+  try{ // 이 기기에만 있던 기록을 처음 한 번 계정으로 올려요
+    if(!L.get('migrated_'+uid,false)){
+      await Promise.all([...records.map(r=>F.setDoc(cdoc('records',r.at),clean(r),{merge:true})),...letters.map(l=>F.setDoc(cdoc('letters',l.at),clean(l),{merge:true}))]);
+      L.set('migrated_'+uid,true);
+    }
+  }catch(e){console.error(e);toast('기존 기록을 올리지 못했어요. 다시 로그인해 주세요')}
+  const col=n=>F.collection(CLOUD.db,'users',uid,n);
+  const err=e=>{console.error(e);toast('클라우드에서 불러오지 못했어요 ('+(e.code||'오류')+')')};
+  CLOUD.unsubs.push(F.onSnapshot(col('records'),sn=>{records=sn.docs.map(d=>d.data()).sort((a,b)=>b.at-a.at);L.set('records',records);refreshAll()},err));
+  CLOUD.unsubs.push(F.onSnapshot(col('letters'),sn=>{letters=sn.docs.map(d=>d.data()).sort((a,b)=>b.at-a.at);L.set('letters',letters);refreshAll()},err));
+  CLOUD.unsubs.push(F.onSnapshot(F.doc(CLOUD.db,'users',uid,'settings','cfg'),sn=>{if(sn.exists()){const d=sn.data();cfg={...cfg,...d};L.set('cfg',cfg);refreshAll()}},err));
+}
+async function cloudInit(){
+  const c=window.FIREBASE_CONFIG;renderAccount();if(!c||!c.apiKey)return;
+  try{
+    const [A,Au,F]=await Promise.all([import(FB+'firebase-app.js'),import(FB+'firebase-auth.js'),import(FB+'firebase-firestore.js')]);
+    const app=A.initializeApp(c);let db;
+    try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})})}catch(e){db=F.getFirestore(app)}
+    CLOUD.Au=Au;CLOUD.F=F;CLOUD.db=db;CLOUD.auth=Au.getAuth(app);
+    Au.onAuthStateChanged(CLOUD.auth,onUser);
+  }catch(e){console.error(e);renderAccount('클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.');$('#acct-btn').style.display='none'}
+}
 
 buildChips();
 $('#s-name').value=cfg.name;$('#s-char').value=cfg.char;$('#s-key').value=cfg.key;$('#s-model').value=cfg.model;renderTone();renderProgress();$('#dogSm').innerHTML=poodle('smile');
+cloudInit();
 if('serviceWorker' in navigator){
   const had=!!navigator.serviceWorker.controller;let reloaded=false;
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had&&!reloaded){reloaded=true;location.reload()}});
