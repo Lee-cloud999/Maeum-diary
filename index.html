@@ -307,10 +307,10 @@ $('#wipe').onclick=()=>{if(confirm('기록과 편지를 모두 삭제할까? 되
 const CLOUD={user:null,unsubs:[]};
 const FB='https://www.gstatic.com/firebasejs/10.14.1/';
 function clean(o){return JSON.parse(JSON.stringify(o))}
-function cdoc(col,at){return CLOUD.F.doc(CLOUD.db,'users',CLOUD.user.uid,col,String(at))}
+function cdoc(col,at){return CLOUD.F.doc(CLOUD.db,'maeumUsers',CLOUD.user.uid,col,String(at))}
 function cloudSet(col,o){if(!CLOUD.user)return;CLOUD.F.setDoc(cdoc(col,o.at),clean(o),{merge:true}).catch(e=>{console.error(e);toast('클라우드 저장에 실패했어요')})}
 function cloudDel(col,o){if(!CLOUD.user||!o)return;CLOUD.F.deleteDoc(cdoc(col,o.at)).catch(console.error)}
-function cloudCfg(){if(!CLOUD.user)return;const {name,char,model,tone}=cfg;CLOUD.F.setDoc(CLOUD.F.doc(CLOUD.db,'users',CLOUD.user.uid,'settings','cfg'),clean({name,char,model,tone}),{merge:true}).catch(console.error)}
+function cloudCfg(){if(!CLOUD.user)return;const {name,char,model,tone}=cfg;CLOUD.F.setDoc(CLOUD.F.doc(CLOUD.db,'maeumUsers',CLOUD.user.uid,'settings','cfg'),clean({name,char,model,tone}),{merge:true}).catch(console.error)}
 async function cloudWipe(rs,ls){
   if(!CLOUD.user)return;const F=CLOUD.F;
   try{const items=[...rs.map(r=>['records',r]),...ls.map(l=>['letters',l])];
@@ -344,11 +344,11 @@ async function onUser(u){
       L.set('migrated_'+uid,true);
     }
   }catch(e){console.error(e);toast('기존 기록을 올리지 못했어요. 다시 로그인해 주세요')}
-  const col=n=>F.collection(CLOUD.db,'users',uid,n);
+  const col=n=>F.collection(CLOUD.db,'maeumUsers',uid,n);
   const err=e=>{console.error(e);toast('클라우드에서 불러오지 못했어요 ('+(e.code||'오류')+')')};
   CLOUD.unsubs.push(F.onSnapshot(col('records'),sn=>{records=sn.docs.map(d=>d.data()).sort((a,b)=>b.at-a.at);L.set('records',records);refreshAll()},err));
   CLOUD.unsubs.push(F.onSnapshot(col('letters'),sn=>{letters=sn.docs.map(d=>d.data()).sort((a,b)=>b.at-a.at);L.set('letters',letters);refreshAll()},err));
-  CLOUD.unsubs.push(F.onSnapshot(F.doc(CLOUD.db,'users',uid,'settings','cfg'),sn=>{if(sn.exists()){const d=sn.data();cfg={...cfg,...d};L.set('cfg',cfg);refreshAll()}},err));
+  CLOUD.unsubs.push(F.onSnapshot(F.doc(CLOUD.db,'maeumUsers',uid,'settings','cfg'),sn=>{if(sn.exists()){const d=sn.data();cfg={...cfg,...d};L.set('cfg',cfg);refreshAll()}},err));
 }
 async function cloudInit(){
   const c=window.FIREBASE_CONFIG;renderAccount();if(!c||!c.apiKey)return;
