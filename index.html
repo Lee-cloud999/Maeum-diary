@@ -3,46 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1f3a34">
+<meta name="theme-color" content="#fdeef3">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>마음편지</title>
 <style>
-:root{--bg:#f4f5f2;--card:#fff;--ink:#22302b;--sub:#7b8a84;--main:#5b8f7b;--main2:#e3efe9;--warn:#c8664f;--line:#e6ebe8}
+:root{--bg:#fff7f3;--card:#fffefd;--ink:#4d3a42;--sub:#a08a94;--main:#e58aa5;--main2:#fde8ef;--warn:#d0607a;--line:#f3e1e6;--lav:#e9e2fa;--mint:#dff2e9;--sun:#fdf0cf}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Noto Sans KR",sans-serif;padding-bottom:80px}
-header{padding:20px 20px 8px;font-size:22px;font-weight:700}
+html{background:linear-gradient(135deg,#f6e6ee,#e9e4f8 55%,#e2f1ec);min-height:100%}
+body{margin:0 auto;max-width:480px;min-height:100vh;background:linear-gradient(180deg,#fdeef3 0,#fff7f3 220px,#fff7f3 100%);color:var(--ink);font-family:-apple-system,"Noto Sans KR",sans-serif;padding-bottom:84px;box-shadow:0 0 40px rgba(180,140,170,.22);position:relative}
+header{padding:22px 20px 10px;font-size:24px;font-weight:700;color:#7a4a5c}
 header small{display:block;font-size:13px;color:var(--sub);font-weight:400;margin-top:2px}
 main{padding:0 16px}
-.card{background:var(--card);border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 1px 6px rgba(0,0,0,.04)}
+.card{background:var(--card);border-radius:22px;padding:18px;margin:12px 0;border:1.5px solid #f8dfe7;box-shadow:0 4px 14px rgba(229,138,165,.10)}
 h3{margin:0 0 12px;font-size:16px}
 .slider{display:flex;justify-content:space-between;gap:8px}
 .slider button{flex:1;font-size:26px;padding:10px 0;border:2px solid var(--line);border-radius:14px;background:#fff}
-.slider button.on{border-color:var(--main);background:var(--main2)}
+.slider button.on{border-color:var(--main);background:var(--main2);transform:scale(1.06)}
 .group{font-size:12px;color:var(--sub);margin:12px 0 6px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);background:#fafbfa;border-radius:20px;padding:8px 14px;font-size:14px}
-.chip.on{background:var(--main);color:#fff;border-color:var(--main)}
-textarea,input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;background:#fafbfa}
+.chip{border:1.5px solid var(--line);background:#fffafb;color:var(--ink);border-radius:20px;padding:8px 14px;font-size:14px}
+#c-neu .chip.on{background:var(--lav);border-color:#b9a9e6;color:#5b4a8a}
+#c-pos .chip.on{background:var(--sun);border-color:#efc772;color:#8a6a1f}
+#c-neg .chip.on{background:var(--main2);border-color:var(--main);color:#a23e5c}
+#s-tone .chip.on{background:var(--mint);border-color:#95c6b1;color:#3f7a63}
+.chip.on{background:var(--main2);color:#a23e5c;border-color:var(--main)}
+textarea,input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;background:#fffafb}
 textarea{min-height:90px;resize:vertical}
-.btn{width:100%;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:600;background:var(--main);color:#fff;margin-top:12px}
-.btn.ghost{background:var(--main2);color:var(--main)}
+.btn{width:100%;border:0;border-radius:16px;padding:14px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#f3a6bd,#e58aa5);color:#fff;margin-top:12px;box-shadow:0 4px 10px rgba(229,138,165,.3)}
+.btn.ghost{background:var(--lav);color:#6a58a5;box-shadow:none}
 .btn:disabled{opacity:.5}
-.prog{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0 4px}
-.prog i{display:block;height:100%;background:#f2b630;border-radius:6px}
+.prog{height:12px;background:#f6e8ec;border-radius:8px;overflow:hidden;margin:8px 0 4px}
+.prog i{display:block;height:100%;background:repeating-linear-gradient(45deg,#f9c4d3 0 6px,#f3a6bd 6px 12px);border-radius:8px;transition:width .4s}
 .muted{color:var(--sub);font-size:13px}
 .letter{white-space:pre-wrap;line-height:1.8;font-size:15px}
 .letter-date{font-size:12px;color:var(--sub);margin-bottom:8px}
 .rec .top{display:flex;justify-content:space-between;font-size:12px;color:var(--sub)}
 .rec .tags{margin:6px 0;display:flex;gap:6px;flex-wrap:wrap}
-.rec .tags span{background:var(--main2);color:var(--main);border-radius:10px;padding:3px 9px;font-size:12px}
+.rec .tags span{background:var(--lav);color:#6a58a5;border-radius:10px;padding:3px 9px;font-size:12px}
 .rec p{margin:4px 0 0;font-size:14px;line-height:1.6}
 .del{border:0;background:none;color:var(--sub);font-size:12px}
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:#fffefd;border-top:1.5px solid #f8dfe7;border-radius:22px 22px 0 0;box-shadow:0 -4px 14px rgba(229,138,165,.12);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;border:0;background:none;padding:12px 0 10px;font-size:12px;color:var(--sub)}
 nav button b{display:block;font-size:20px;margin-bottom:2px;font-weight:400}
-nav button.on{color:var(--main);font-weight:700}
+nav button.on{color:#d0607a;font-weight:700}
 .view{display:none}.view.on{display:block}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#22302bdd;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;max-width:86%;text-align:center}
 .toast.show{opacity:1}
@@ -57,7 +62,7 @@ label{font-size:13px;color:var(--sub);display:block;margin:12px 0 6px}
 @keyframes pop{50%{transform:scale(1.12)}}
 .modal{position:fixed;inset:0;background:rgba(70,50,40,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
 .modal.on{display:flex}
-.sheet{width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:0 14px 22px;animation:up .4s ease}
+.sheet{width:100%;max-width:480px;max-height:90vh;overflow:auto;padding:0 14px 22px;animation:up .4s ease}
 @keyframes up{from{transform:translateY(50px);opacity:0}to{transform:none;opacity:1}}
 .dog{display:block;margin:0 auto -46px;position:relative;z-index:2;width:190px;animation:bob 3s ease-in-out infinite}
 .dog img,.dogrow img{width:100%;height:auto;display:block}
