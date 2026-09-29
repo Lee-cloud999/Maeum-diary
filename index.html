@@ -140,7 +140,7 @@ pos:['신나는','열정적인','즐거운','의욕적인','상쾌한','뿌듯�
 neg:['답답한','불안한','걱정되는','우울한','화나는','외로운','지친','속상한','짜증나는','후회되는']};
 const MOODS=['😞','😕','😐','🙂','😄'];
 const TONES=['다정한 반말','정중한 존댓말'];
-const REQ=5;
+const REQ=3;
 const L={get(k,d){try{return JSON.parse(localStorage.getItem('mp_'+k))??d}catch(e){return d}},set(k,v){localStorage.setItem('mp_'+k,JSON.stringify(v))}};
 let records=L.get('records',[]), letters=L.get('letters',[]), cfg=L.get('cfg',{name:'',char:'마음이',key:'',model:'claude-sonnet-5-5',tone:0});
 let mood=null, picked=new Set();
