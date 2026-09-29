@@ -59,15 +59,15 @@ label{font-size:13px;color:var(--sub);display:block;margin:12px 0 6px}
 .modal.on{display:flex}
 .sheet{width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:0 14px 22px;animation:up .4s ease}
 @keyframes up{from{transform:translateY(50px);opacity:0}to{transform:none;opacity:1}}
-.dog{display:block;margin:0 auto -30px;position:relative;z-index:2;width:130px;animation:bob 3s ease-in-out infinite}
-.dog svg{width:100%;height:auto}
+.dog{display:block;margin:0 auto -46px;position:relative;z-index:2;width:190px;animation:bob 3s ease-in-out infinite}
+.dog img,.dogrow img{width:100%;height:auto;display:block}
 @keyframes bob{50%{transform:translateY(-5px)}}
-.paper{position:relative;background:#fffaf0 repeating-linear-gradient(transparent 0 31px,#f1e5d0 31px 32px);border-radius:20px;padding:42px 22px 18px;box-shadow:0 8px 28px rgba(0,0,0,.22);outline:4px dashed #f5c3d0;outline-offset:-10px}
+.paper{position:relative;background:#fffaf0 repeating-linear-gradient(transparent 0 31px,#f1e5d0 31px 32px);border-radius:20px;padding:58px 22px 18px;box-shadow:0 8px 28px rgba(0,0,0,.22);outline:4px dashed #f5c3d0;outline-offset:-10px}
 .paper .letter{line-height:32px;font-size:15px}
 .paper .letter-date{margin-bottom:10px}
 .close{display:block;margin:14px auto 0;border:0;background:#f5c3d0;color:#7a4a56;border-radius:20px;padding:10px 28px;font-size:15px;font-weight:600}
 .dogrow{display:flex;align-items:center;gap:10px}
-.dogrow .sm{width:64px;flex:none}
+.dogrow .sm{width:84px;flex:none}
 .dogrow h3{margin:0}
 </style>
 </head>
@@ -147,23 +147,8 @@ let mood=null, picked=new Set();
 
 
 /* ---------- 푸들 캐릭터 & 털실 편지봉투 ---------- */
-function poodle(happy){
-  const F='#d9b48a',D='#bf9463',L='#efd9bb',I='#4a3626';
-  const curl=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${F}" stroke="${D}" stroke-width="1.2"/>`;
-  return `<svg viewBox="0 0 120 118" xmlns="http://www.w3.org/2000/svg">
-  ${curl(22,64,14)}${curl(18,80,13)}${curl(25,94,12)}${curl(98,64,14)}${curl(102,80,13)}${curl(95,94,12)}
-  <circle cx="60" cy="68" r="31" fill="${F}" stroke="${D}" stroke-width="1.2"/>
-  ${curl(45,30,13)}${curl(60,22,15)}${curl(75,30,13)}${curl(52,40,12)}${curl(68,40,12)}
-  <ellipse cx="60" cy="79" rx="16" ry="12" fill="${L}"/>
-  <circle cx="47" cy="65" r="4.2" fill="${I}"/><circle cx="73" cy="65" r="4.2" fill="${I}"/>
-  <circle cx="48.4" cy="63.6" r="1.4" fill="#fff"/><circle cx="74.4" cy="63.6" r="1.4" fill="#fff"/>
-  <circle cx="38" cy="76" r="5" fill="#f4a9b8" opacity=".55"/><circle cx="82" cy="76" r="5" fill="#f4a9b8" opacity=".55"/>
-  <ellipse cx="60" cy="73" rx="5.2" ry="3.7" fill="${I}"/>
-  <path d="M60 77v3M60 80q-4 5-8 1M60 80q4 5 8 1" stroke="${I}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-  ${happy?'<path d="M56 84q4 9 8 0z" fill="#f28ea1"/>':''}
-  <circle cx="42" cy="110" r="10" fill="${L}" stroke="${D}" stroke-width="1.2"/><circle cx="78" cy="110" r="10" fill="${L}" stroke="${D}" stroke-width="1.2"/>
-  </svg>`;
-}
+const POODLE={open:1,smile:2,calm:3,sleepy:4,happy:5,wink:6};
+function poodle(kind){return `<img src="img/poodle${POODLE[kind]||2}.png" alt="푸들" draggable="false">`}
 const ENV_C=['#f9d0dc','#cfe8dd','#d9d2f2','#fbe6b8','#cfe3f7'];
 const ENV_D=['#e79db4','#95c6b1','#ad9fe0','#ecbd62','#93bce4'];
 function envelope(ci,open){
@@ -190,7 +175,7 @@ function closeModal(){$('#modal').classList.remove('on');renderLetters()}
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'||e.target.classList.contains('close'))closeModal()});
 function openLetter(i){
   const l=letters[i];if(!l)return;l.read=true;L.set('letters',letters);
-  openModal(`<div class="dog">${poodle(true)}</div><div class="paper"><div class="letter-date">${fmt(l.at)} · ${esc(l.from||'')}</div><div class="letter">${esc(l.text)}</div></div><button class="close">닫기</button>`);
+  openModal(`<div class="dog">${poodle('open')}</div><div class="paper"><div class="letter-date">${fmt(l.at)} · ${esc(l.from||'')}</div><div class="letter">${esc(l.text)}</div></div><button class="close">닫기</button>`);
 }
 
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2200)}
@@ -242,7 +227,7 @@ $('#save').onclick=()=>{
 
 function renderLetters(){
   $('#letters').innerHTML=letters.length?`<div class="envs">${letters.map((l,i)=>`<button class="env" data-i="${i}">${l.read?'':'<span class="new">NEW</span>'}${envelope(letters.length-1-i,!!l.read)}<div class="d">${fmt(l.at)}</div></button>`).join('')}</div>`
-   :`<div class="card muted" style="text-align:center"><div style="width:90px;margin:0 auto 8px">${poodle(false)}</div>아직 받은 편지가 없어요.<br>감정을 기록하면 ${esc(cfg.char||'마음이')}가 편지를 써줄 거예요.</div>`;
+   :`<div class="card muted" style="text-align:center"><div style="width:130px;margin:0 auto 8px">${poodle('sleepy')}</div>아직 받은 편지가 없어요.<br>감정을 기록하면 ${esc(cfg.char||'마음이')}가 편지를 써줄 거예요.</div>`;
   document.querySelectorAll('.env').forEach(b=>b.onclick=()=>openLetter(+b.dataset.i));
 }
 function renderHistory(){
@@ -280,7 +265,7 @@ $('#getLetter').onclick=async()=>{
   if(recs.length<1)return toast('새 기록이 없어요. 먼저 감정을 기록해줘');
   if(recs.length<REQ&&!confirm(`기록이 ${recs.length}개뿐이야. 그래도 편지를 받을까?`))return;
   const b=$('#getLetter');b.disabled=true;b.textContent='편지 쓰는 중…';
-  openModal(`<div class="dog">${poodle(false)}</div><div class="paper"><div class="muted" style="text-align:center;padding:18px 0">${esc(cfg.char||'마음이')}가 편지를 쓰고 있어요… ✏️</div></div>`);
+  openModal(`<div class="dog">${poodle('calm')}</div><div class="paper"><div class="muted" style="text-align:center;padding:18px 0">${esc(cfg.char||'마음이')}가 편지를 쓰고 있어요… ✏️</div></div>`);
   let text;
   try{text=cfg.key?await aiLetter(recs):fallbackLetter(recs);}
   catch(e){text=fallbackLetter(recs);toast('AI 연결 실패, 기본 편지로 대체했어요');console.error(e)}
@@ -296,7 +281,7 @@ $('#export').onclick=()=>{const b=new Blob([JSON.stringify({records,letters},nul
 $('#wipe').onclick=()=>{if(confirm('기록과 편지를 모두 삭제할까? 되돌릴 수 없어요.')){records=[];letters=[];L.set('records',[]);L.set('letters',[]);renderProgress();toast('삭제했어요')}};
 
 buildChips();
-$('#s-name').value=cfg.name;$('#s-char').value=cfg.char;$('#s-key').value=cfg.key;$('#s-model').value=cfg.model;renderTone();renderProgress();$('#dogSm').innerHTML=poodle(true);
+$('#s-name').value=cfg.name;$('#s-char').value=cfg.char;$('#s-key').value=cfg.key;$('#s-model').value=cfg.model;renderTone();renderProgress();$('#dogSm').innerHTML=poodle('smile');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
