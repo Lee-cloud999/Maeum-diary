@@ -29,7 +29,7 @@ h3{margin:0 0 12px;font-size:16px}
 #c-neg .chip.on{background:var(--main2);border-color:var(--main);color:#a23e5c}
 #s-tone .chip.on{background:var(--mint);border-color:#95c6b1;color:#3f7a63}
 .chip.on{background:var(--main2);color:#a23e5c;border-color:var(--main)}
-textarea,input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;background:#fffafb}
+textarea,input[type=text],input[type=password],input[type=email]{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:15px;font-family:inherit;background:#fffafb}
 textarea{min-height:90px;resize:vertical}
 .btn{width:100%;border:0;border-radius:16px;padding:14px;font-size:16px;font-weight:700;background:linear-gradient(135deg,#f3a6bd,#e58aa5);color:#fff;margin-top:12px;box-shadow:0 4px 10px rgba(229,138,165,.3)}
 .btn.ghost{background:var(--lav);color:#6a58a5;box-shadow:none}
@@ -110,7 +110,16 @@ main{max-width:100%}
   <div class="card">
     <h3>계정 · 클라우드 저장</h3>
     <div class="muted" id="acct-msg">불러오는 중…</div>
-    <button class="btn" id="acct-btn" style="display:none">Google로 로그인</button>
+    <div id="acct-form" style="display:none">
+      <label>이메일</label>
+      <input type="email" id="a-email" autocomplete="email" placeholder="you@example.com">
+      <label>비밀번호 (6자 이상)</label>
+      <input type="password" id="a-pw" autocomplete="current-password" placeholder="비밀번호">
+      <button class="btn" id="a-login">로그인</button>
+      <button class="btn ghost" id="a-signup">새로 가입하기</button>
+      <button class="del" id="a-reset" style="margin-top:10px">비밀번호를 잊었어요</button>
+    </div>
+    <button class="btn ghost" id="a-logout" style="display:none">로그아웃</button>
   </div>
   <div class="card">
     <h3>설정</h3>
@@ -310,18 +319,20 @@ async function cloudWipe(rs,ls){
 }
 function refreshAll(){renderProgress();renderLetters();renderHistory();$('#s-name').value=cfg.name||'';$('#s-char').value=cfg.char||'';$('#s-model').value=cfg.model||'';renderTone()}
 function renderAccount(msg){
-  const m=$('#acct-msg'),b=$('#acct-btn');
-  if(!window.FIREBASE_CONFIG||!window.FIREBASE_CONFIG.apiKey){m.textContent='클라우드 저장이 아직 설정되지 않았어요. 지금은 이 기기에만 저장돼요.';b.style.display='none';return}
-  if(!CLOUD.auth){m.textContent=msg||'연결 중…';b.style.display='none';return}
-  b.style.display='block';
-  if(CLOUD.user){m.textContent=`${CLOUD.user.displayName||CLOUD.user.email||'로그인됨'} 계정으로 동기화 중이에요. 기록은 어느 기기에서든 같이 보여요.`;b.textContent='로그아웃';b.className='btn ghost'}
-  else{m.textContent=msg||'로그인하면 기록이 내 계정에 저장되고, 폰과 PC에서 같이 볼 수 있어요.';b.textContent='Google로 로그인';b.className='btn'}
+  const m=$('#acct-msg'),f=$('#acct-form'),o=$('#a-logout');
+  f.style.display='none';o.style.display='none';
+  if(!window.FIREBASE_CONFIG||!window.FIREBASE_CONFIG.apiKey){m.textContent='클라우드 저장이 아직 설정되지 않았어요. 지금은 이 기기에만 저장돼요.';return}
+  if(!CLOUD.auth){m.textContent=msg||'연결 중…';return}
+  if(CLOUD.user){m.textContent=`${CLOUD.user.email||'로그인됨'} 계정으로 동기화 중이에요. 기록은 어느 기기에서든 같이 보여요.`;o.style.display='block'}
+  else{m.textContent=msg||'이메일로 로그인하면 기록이 내 계정에 저장되고, 폰과 PC에서 같이 볼 수 있어요.';f.style.display='block'}
 }
-$('#acct-btn').onclick=async()=>{
-  if(!CLOUD.auth)return;const Au=CLOUD.Au;
-  try{ if(CLOUD.user){await Au.signOut(CLOUD.auth)} else {await Au.signInWithPopup(CLOUD.auth,new Au.GoogleAuthProvider())} }
-  catch(e){console.error(e);toast(e.code==='auth/popup-closed-by-user'?'로그인이 취소됐어요':'로그인에 실패했어요 ('+(e.code||'오류')+')')}
-};
+const AUTH_ERR={'auth/invalid-email':'이메일 형식이 올바르지 않아요','auth/missing-password':'비밀번호를 입력해 주세요','auth/invalid-credential':'이메일이나 비밀번호가 맞지 않아요','auth/user-not-found':'가입되지 않은 이메일이에요','auth/wrong-password':'비밀번호가 맞지 않아요','auth/email-already-in-use':'이미 가입된 이메일이에요. 로그인해 주세요','auth/weak-password':'비밀번호는 6자 이상으로 해주세요','auth/too-many-requests':'시도가 너무 많아요. 잠시 후 다시 해주세요','auth/operation-not-allowed':'Firebase에서 이메일/비밀번호 로그인이 꺼져 있어요','auth/network-request-failed':'인터넷 연결을 확인해 주세요'};
+function authErr(e){console.error(e);toast(AUTH_ERR[e.code]||('실패했어요 ('+(e.code||'오류')+')'))}
+function creds(){const e=$('#a-email').value.trim(),p=$('#a-pw').value;if(!e||!p){toast('이메일과 비밀번호를 입력해 주세요');return null}return [e,p]}
+$('#a-login').onclick=async()=>{const c=creds();if(!c||!CLOUD.auth)return;try{await CLOUD.Au.signInWithEmailAndPassword(CLOUD.auth,...c);$('#a-pw').value=''}catch(e){authErr(e)}};
+$('#a-signup').onclick=async()=>{const c=creds();if(!c||!CLOUD.auth)return;try{await CLOUD.Au.createUserWithEmailAndPassword(CLOUD.auth,...c);$('#a-pw').value='';toast('가입됐어요')}catch(e){authErr(e)}};
+$('#a-reset').onclick=async()=>{const e=$('#a-email').value.trim();if(!e)return toast('위 칸에 이메일을 먼저 적어주세요');try{await CLOUD.Au.sendPasswordResetEmail(CLOUD.auth,e);toast('비밀번호 재설정 메일을 보냈어요')}catch(x){authErr(x)}};
+$('#a-logout').onclick=async()=>{try{await CLOUD.Au.signOut(CLOUD.auth)}catch(e){authErr(e)}};
 async function onUser(u){
   CLOUD.unsubs.forEach(f=>f());CLOUD.unsubs=[];CLOUD.user=u;renderAccount();
   if(!u)return;const F=CLOUD.F,uid=u.uid;
@@ -347,7 +358,7 @@ async function cloudInit(){
     try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})})}catch(e){db=F.getFirestore(app)}
     CLOUD.Au=Au;CLOUD.F=F;CLOUD.db=db;CLOUD.auth=Au.getAuth(app);
     Au.onAuthStateChanged(CLOUD.auth,onUser);
-  }catch(e){console.error(e);renderAccount('클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.');$('#acct-btn').style.display='none'}
+  }catch(e){console.error(e);renderAccount('클라우드에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.')}
 }
 
 buildChips();
