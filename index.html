@@ -12,7 +12,7 @@
 :root{--bg:#fff7f3;--card:#fffefd;--ink:#4d3a42;--sub:#a08a94;--main:#e58aa5;--main2:#fde8ef;--warn:#d0607a;--line:#f3e1e6;--lav:#e9e2fa;--mint:#dff2e9;--sun:#fdf0cf}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{background:linear-gradient(135deg,#f6e6ee,#e9e4f8 55%,#e2f1ec);min-height:100%}
-body{margin:0 auto;max-width:480px;min-height:100vh;background:linear-gradient(180deg,#fdeef3 0,#fff7f3 220px,#fff7f3 100%);color:var(--ink);font-family:-apple-system,"Noto Sans KR",sans-serif;padding-bottom:84px;box-shadow:0 0 40px rgba(180,140,170,.22);position:relative}
+body{margin:0 auto;max-width:480px;min-height:100vh;min-height:100dvh;background:linear-gradient(180deg,#fdeef3 0,#fff7f3 220px,#fff7f3 100%);color:var(--ink);font-family:-apple-system,"Noto Sans KR",sans-serif;padding-bottom:84px;box-shadow:0 0 40px rgba(180,140,170,.22);position:relative}
 header{padding:22px 20px 10px;font-size:24px;font-weight:700;color:#7a4a5c}
 header small{display:block;font-size:13px;color:var(--sub);font-weight:400;margin-top:2px}
 main{padding:0 16px}
@@ -44,7 +44,7 @@ textarea{min-height:90px;resize:vertical}
 .rec .tags span{background:var(--lav);color:#6a58a5;border-radius:10px;padding:3px 9px;font-size:12px}
 .rec p{margin:4px 0 0;font-size:14px;line-height:1.6}
 .del{border:0;background:none;color:var(--sub);font-size:12px}
-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:#fffefd;border-top:1.5px solid #f8dfe7;border-radius:22px 22px 0 0;box-shadow:0 -4px 14px rgba(229,138,165,.12);padding-bottom:env(safe-area-inset-bottom)}
+nav{position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:480px;z-index:10;display:flex;background:#fffefd;border-top:1.5px solid #f8dfe7;border-radius:22px 22px 0 0;box-shadow:0 -4px 14px rgba(229,138,165,.12);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;border:0;background:none;padding:12px 0 10px;font-size:12px;color:var(--sub)}
 nav button b{display:block;font-size:20px;margin-bottom:2px;font-weight:400}
 nav button.on{color:#d0607a;font-weight:700}
@@ -65,7 +65,9 @@ label{font-size:13px;color:var(--sub);display:block;margin:12px 0 6px}
 .sheet{width:100%;max-width:480px;max-height:90vh;overflow:auto;padding:0 14px 22px;animation:up .4s ease}
 @keyframes up{from{transform:translateY(50px);opacity:0}to{transform:none;opacity:1}}
 .dog{display:block;margin:0 auto -46px;position:relative;z-index:2;width:190px;animation:bob 3s ease-in-out infinite}
-.dog img,.dogrow img{width:100%;height:auto;display:block}
+.dog img,.dogrow img,#letters img{width:100%;height:auto;display:block}
+html,body{overflow-x:hidden}
+main{max-width:100%}
 @keyframes bob{50%{transform:translateY(-5px)}}
 .paper{position:relative;background:#fffaf0 repeating-linear-gradient(transparent 0 31px,#f1e5d0 31px 32px);border-radius:20px;padding:58px 22px 18px;box-shadow:0 8px 28px rgba(0,0,0,.22);outline:4px dashed #f5c3d0;outline-offset:-10px}
 .paper .letter{line-height:32px;font-size:15px}
