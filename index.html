@@ -227,6 +227,7 @@ function show(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
   document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
   if(v==='letters')renderLetters(); if(v==='history')renderHistory(); window.scrollTo(0,0);
+  try{history.replaceState(null,'','#'+v)}catch(e){}
 }
 
 function pending(){const last=letters.length?letters[0].at:0;return records.filter(r=>r.at>last)}
@@ -363,6 +364,7 @@ async function cloudInit(){
 
 buildChips();
 $('#s-name').value=cfg.name;$('#s-char').value=cfg.char;$('#s-key').value=cfg.key;$('#s-model').value=cfg.model;renderTone();renderProgress();$('#dogSm').innerHTML=poodle('smile');
+{const h=location.hash.slice(1);if(['write','letters','history','settings'].includes(h))show(h)}
 cloudInit();
 if('serviceWorker' in navigator){
   const had=!!navigator.serviceWorker.controller;let reloaded=false;
