@@ -1,5 +1,5 @@
 // 배포할 때마다 VERSION 숫자만 올리면 이전 캐시가 지워지고 새 파일로 갱신돼요.
-const VERSION='v13';
+const VERSION='v14';
 const C='maeum-'+VERSION;
 const FILES=['./','./index.html','./manifest.json','./firebase-config.js','./icon.svg','./img/poodle1.png','./img/poodle2.png','./img/poodle3.png','./img/poodle4.png','./img/poodle5.png','./img/poodle6.png'];
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)))});
