@@ -96,10 +96,10 @@ main{max-width:100%}
     <button class="btn" id="save">기록하기</button>
   </div>
   <div class="card">
-    <div class="dogrow"><div class="sm" id="dogSm"></div><h3>내일의 편지</h3></div>
+    <div class="dogrow"><div class="sm" id="dogSm"></div><h3 id="letterTitle">마음이의 답장</h3></div>
     <div class="prog"><i id="pbar"></i></div>
     <div class="muted" id="ptxt"></div>
-    <button class="btn ghost" id="getLetter">지금 편지 받기</button>
+    <button class="btn ghost" id="getLetter">지금 답장 받기</button>
   </div>
 </section>
 
@@ -234,7 +234,8 @@ function pending(){const last=letters.length?letters[0].at:0;return records.filt
 function renderProgress(){
   const n=Math.min(pending().length,REQ);
   $('#pbar').style.width=(n/REQ*100)+'%';
-  $('#ptxt').textContent=n>=REQ?'편지가 준비됐어! 지금 받아볼 수 있어.':`감정을 ${REQ-n}번 더 기록하면 편지를 받을 수 있어 (${n}/${REQ})`;
+  $('#letterTitle').textContent=(cfg.char||'마음이')+'의 답장';
+  $('#ptxt').textContent=n>=REQ?'답장이 준비됐어! 지금 받아볼 수 있어.':`감정을 ${REQ-n}번 더 기록하면 답장을 받을 수 있어 (${n}/${REQ})`;
   $('#sub').textContent=`${cfg.name?cfg.name+'님, ':''}오늘도 마음을 남겨봐요`;
 }
 
@@ -251,7 +252,7 @@ $('#save').onclick=()=>{
 
 function renderLetters(){
   $('#letters').innerHTML=letters.length?`<div class="envs">${letters.map((l,i)=>`<button class="env" data-i="${i}">${l.read?'':'<span class="new">NEW</span>'}${envelope(letters.length-1-i,!!l.read)}<div class="d">${fmt(l.at)}</div></button>`).join('')}</div>`
-   :`<div class="card muted" style="text-align:center"><div style="width:130px;margin:0 auto 8px">${poodle('sleepy')}</div>아직 받은 편지가 없어요.<br>감정을 기록하면 ${esc(cfg.char||'마음이')}가 편지를 써줄 거예요.</div>`;
+   :`<div class="card muted" style="text-align:center"><div style="width:130px;margin:0 auto 8px">${poodle('sleepy')}</div>아직 받은 답장이 없어요.<br>감정을 기록하면 ${esc(cfg.char||'마음이')}가 답장을 써줄 거예요.</div>`;
   document.querySelectorAll('.env').forEach(b=>b.onclick=()=>openLetter(+b.dataset.i));
 }
 function renderHistory(){
@@ -287,14 +288,14 @@ async function aiLetter(recs){
 $('#getLetter').onclick=async()=>{
   const recs=pending();
   if(recs.length<1)return toast('새 기록이 없어요. 먼저 감정을 기록해줘');
-  if(recs.length<REQ&&!confirm(`기록이 ${recs.length}개뿐이야. 그래도 편지를 받을까?`))return;
+  if(recs.length<REQ&&!confirm(`기록이 ${recs.length}개뿐이야. 그래도 답장을 받을까?`))return;
   const b=$('#getLetter');b.disabled=true;b.textContent='편지 쓰는 중…';
-  openModal(`<div class="dog">${poodle('calm')}</div><div class="paper"><div class="muted" style="text-align:center;padding:18px 0">${esc(cfg.char||'마음이')}가 편지를 쓰고 있어요… ✏️</div></div>`);
+  openModal(`<div class="dog">${poodle('calm')}</div><div class="paper"><div class="muted" style="text-align:center;padding:18px 0">${esc(cfg.char||'마음이')}가 답장을 쓰고 있어요… ✏️</div></div>`);
   let text;
   try{text=cfg.key?await aiLetter(recs):fallbackLetter(recs);}
-  catch(e){text=fallbackLetter(recs);toast('AI 연결 실패, 기본 편지로 대체했어요');console.error(e)}
+  catch(e){text=fallbackLetter(recs);toast('AI 연결 실패, 기본 답장으로 대체했어요');console.error(e)}
   const nl={at:Date.now(),text,from:cfg.char||'마음이',read:false};letters.unshift(nl);L.set('letters',letters);cloudSet('letters',nl);
-  b.disabled=false;b.textContent='지금 편지 받기';renderProgress();show('letters');openLetter(0);
+  b.disabled=false;b.textContent='지금 답장 받기';renderProgress();show('letters');openLetter(0);
 };
 
 $('#s-save').onclick=()=>{
