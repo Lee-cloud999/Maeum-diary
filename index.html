@@ -268,11 +268,15 @@ function renderHistory(){
 
 function fallbackLetter(recs){
   const avg=recs.reduce((a,r)=>a+r.mood,0)/recs.length;
-  const emo=[...new Set(recs.flatMap(r=>r.emotions))].slice(0,4).join(', ')||'여러 마음';
-  const nm=cfg.name||'너';
-  return cfg.tone===0
-   ?`${nm}에게,\n\n요즘 ${emo} 같은 마음이 자주 지나갔구나. ${avg>=3.5?'좋은 순간들이 꽤 있었네. 그 기분, 잠깐 더 누려도 돼.':avg>=2.5?'평범한 듯해도 하루하루를 잘 지나오고 있어.':'조금 무거운 날들이었을 것 같아. 그래도 이렇게 마음을 적어둔 것만으로 충분히 잘하고 있어.'}\n\n오늘은 따뜻한 물 한 잔 마시면서 천천히 쉬어가자. 기록해줘서 고마워.\n\n- ${cfg.char||'마음이'}가`
-   :`${nm}님께,\n\n요즘 ${emo} 같은 마음이 자주 지나갔군요. ${avg>=3.5?'좋은 순간들도 꽤 있었네요. 그 기분을 잠시 더 누리셔도 좋아요.':avg>=2.5?'평범한 듯해도 하루하루를 잘 지나오고 계세요.':'조금 무거운 날들이었을 것 같아요. 마음을 적어두신 것만으로도 충분히 잘하고 계세요.'}\n\n오늘은 따뜻한 물 한 잔 드시며 천천히 쉬어가세요. 기록해주셔서 고마워요.\n\n- ${cfg.char||'마음이'} 드림`;
+  const emos=[...new Set(recs.flatMap(r=>r.emotions))].slice(0,3);
+  const ch=cfg.char||'마음이',nm=cfg.name;
+  const feel=emos.length?`${emos.join(', ')} 기분`:'여러 가지 기분';
+  if(cfg.tone===0){
+    const mid=avg>=3.5?'좋은 순간들이 꽤 있었네. 그 기분, 잠깐 더 누려도 돼.':avg>=2.5?'평범한 듯해도 하루하루를 잘 지나오고 있어.':'조금 무거운 날들이었을 것 같아. 그래도 이렇게 마음을 적어둔 것만으로 충분히 잘하고 있어.';
+    return `${nm?nm+'에게':'안녕'},\n\n요즘 ${feel}이 자주 들었구나. ${mid}\n\n오늘은 따뜻한 물 한 잔 마시면서 천천히 쉬어가자. 기록해줘서 고마워.\n\n- ${ch} 씀`;
+  }
+  const mid=avg>=3.5?'좋은 순간들도 꽤 있었네요. 그 기분을 잠시 더 누리셔도 좋아요.':avg>=2.5?'평범한 듯해도 하루하루를 잘 지나오고 계세요.':'조금 무거운 날들이었을 것 같아요. 마음을 적어두신 것만으로도 충분히 잘하고 계세요.';
+  return `${nm?nm+' 님께':'안녕하세요'},\n\n요즘 ${feel}이 자주 드신 것 같아요. ${mid}\n\n오늘은 따뜻한 물 한 잔 드시며 천천히 쉬어가세요. 기록해주셔서 고마워요.\n\n- ${ch} 드림`;
 }
 
 async function aiLetter(recs){
